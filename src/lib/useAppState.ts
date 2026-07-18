@@ -28,8 +28,8 @@ export function useAppState() {
     if (hydrated) saveState(state);
   }, [state, hydrated]);
 
-  const saveMaterial = useCallback((moduleId: string, content: string) => {
-    setState((s) => _saveMaterial(s, moduleId, content));
+  const saveMaterial = useCallback((moduleId: string, topic: string, content: string) => {
+    setState((s) => _saveMaterial(s, moduleId, topic, content));
   }, []);
 
   const saveNotes = useCallback((moduleId: string, notes: string) => {

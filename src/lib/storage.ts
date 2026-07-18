@@ -17,7 +17,10 @@ export function loadState(): AppState {
     const raw = window.localStorage.getItem(KEY);
     if (!raw) return initialState();
     const parsed = JSON.parse(raw) as AppState;
-    if (parsed.version !== 1) return initialState();
+    // Schema v1 (material único por módulo) é incompatível com v2 (material por
+    // tópico). Em vez de migrar, descartamos — é uma ferramenta pessoal e o
+    // material é facilmente regerado. Ver docs/adr/0002.
+    if (parsed.version !== 2) return initialState();
     return parsed;
   } catch {
     return initialState();

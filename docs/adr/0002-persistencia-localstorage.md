@@ -31,6 +31,15 @@ folga, é síncrono e trivial de usar, e não exige setup.
   grande, pode aproximar o limite; improvável no uso previsto, e a escrita falha
   de forma silenciosa e segura (o app segue funcional em memória na sessão).
 
+## Versionamento do schema
+
+O estado carrega um campo `version`. Quando o modelo mudou de material único
+por módulo (v1) para material por tópico (v2), a decisão foi **descartar** o
+estado v1 ao carregar, em vez de escrever uma migração. Justificativa: é uma
+ferramenta pessoal, o material é regenerável a partir dos prompts, e uma
+migração custaria mais do que vale. Um produto com dados de usuários reais
+exigiria a migração — aqui, o descarte é o trade-off certo.
+
 ## Alternativas consideradas
 
 - **IndexedDB.** Mais robusto e assíncrono, mas overkill para este volume e com

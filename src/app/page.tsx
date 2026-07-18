@@ -44,7 +44,7 @@ export default function Home() {
                   key={module.id}
                   module={module}
                   progress={getProgress(state, module.id)}
-                  onSaveMaterial={(c) => saveMaterial(module.id, c)}
+                  onSaveMaterial={(topic, c) => saveMaterial(module.id, topic, c)}
                   onSaveNotes={(n) => saveNotes(module.id, n)}
                   onReadyForGate={() => markReadyForGate(module.id)}
                   onRecordVerdict={(r) => recordGateResult(module.id, r)}

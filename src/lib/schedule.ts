@@ -18,11 +18,11 @@ import type {
  */
 
 export function emptyProgress(moduleId: string): ModuleProgress {
-  return { moduleId, stage: 'not-started', notes: '', gateResults: [] };
+  return { moduleId, stage: 'not-started', materials: {}, notes: '', gateResults: [] };
 }
 
 export function initialState(): AppState {
-  return { version: 1, progress: {}, bufferConsumed: 0 };
+  return { version: 2, progress: {}, bufferConsumed: 0 };
 }
 
 export function getProgress(state: AppState, moduleId: string): ModuleProgress {
@@ -39,22 +39,39 @@ export function bufferBlown(state: AppState, program: Program): boolean {
   return state.bufferConsumed > program.meta.bufferWeeks;
 }
 
-/** Salva o material de estudo e move o módulo para "studying" se ainda não começou. */
+/**
+ * Salva o material de UM tópico e move o módulo para "studying" se ainda não
+ * começou. Não rebaixa estágios mais avançados (ex.: um módulo em "passed" que
+ * recebe material novo continua "passed").
+ */
 export function saveMaterial(
   state: AppState,
   moduleId: string,
+  topic: string,
   content: string,
   now: () => Date = () => new Date(),
 ): AppState {
   const prev = getProgress(state, moduleId);
-  const stage: ModuleStage =
-    prev.stage === 'not-started' ? 'studying' : prev.stage;
+  const stage: ModuleStage = prev.stage === 'not-started' ? 'studying' : prev.stage;
   const next: ModuleProgress = {
     ...prev,
     stage,
-    material: { savedAt: now().toISOString(), content },
+    materials: {
+      ...prev.materials,
+      [topic]: { savedAt: now().toISOString(), content },
+    },
   };
   return { ...state, progress: { ...state.progress, [moduleId]: next } };
+}
+
+/** Quantos tópicos do módulo já têm material salvo. */
+export function materialsCount(progress: ModuleProgress): number {
+  return Object.keys(progress.materials).length;
+}
+
+/** true quando todos os tópicos do módulo têm material — pronto para o portão. */
+export function allTopicsCovered(module: Module, progress: ModuleProgress): boolean {
+  return module.topics.every((t) => progress.materials[t]?.content?.trim());
 }
 
 /** Marca que o aluno terminou de estudar e está pronto para o portão. */

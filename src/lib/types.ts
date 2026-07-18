@@ -48,7 +48,7 @@ export interface Program {
 /** Estágio de um módulo no ciclo de estudo. */
 export type ModuleStage =
   | 'not-started' // ainda não começou
-  | 'studying' // material gerado, em estudo
+  | 'studying' // ao menos um tópico com material gerado, em estudo
   | 'ready-for-gate' // estudou, pronto para a entrevista-portão
   | 'passed' // passou no portão
   | 'needs-review'; // reprovou; consome buffer, precisa revisar
@@ -64,7 +64,7 @@ export interface GateResult {
   notes?: string;
 }
 
-/** Material de estudo colado de volta no app após gerado num chat. */
+/** Material de estudo de UM tópico, colado de volta no app após gerado num chat. */
 export interface StudyMaterial {
   /** Data ISO em que foi salvo. */
   savedAt: string;
@@ -72,11 +72,18 @@ export interface StudyMaterial {
   content: string;
 }
 
-/** Estado de progresso de um único módulo (o que muda ao longo do tempo). */
+/**
+ * Estado de progresso de um único módulo (o que muda ao longo do tempo).
+ *
+ * O material é rastreado POR TÓPICO: cada tópico do módulo tem (ou não) seu
+ * próprio material gerado. Isso mantém cada peça pequena e bem produzida —
+ * pedir "o módulo AWS inteiro" de uma vez degradava a qualidade.
+ */
 export interface ModuleProgress {
   moduleId: string;
   stage: ModuleStage;
-  material?: StudyMaterial;
+  /** Materiais por tópico. A chave é o nome do tópico (Module.topics[i]). */
+  materials: Record<string, StudyMaterial>;
   /** Anotações livres do usuário sobre o módulo. */
   notes: string;
   /** Histórico de tentativas no portão (a última é a que vale). */
@@ -86,7 +93,7 @@ export interface ModuleProgress {
 /** Estado completo persistido no localStorage. */
 export interface AppState {
   /** Versão do schema — permite migração futura. */
-  version: 1;
+  version: 2;
   progress: Record<string, ModuleProgress>;
   /**
    * Semanas de buffer já consumidas por reprovações.

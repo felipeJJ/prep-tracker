@@ -1,12 +1,17 @@
 import type { Module, ModuleProgress } from '@/lib/types';
+import { EXAMPLE_GUIDE } from '@/lib/exampleGuide';
 
 /**
  * Geração de prompts.
  *
  * O app não chama nenhuma IA. Ele monta prompts ricos para o usuário copiar e
  * colar num chat do Claude.ai. A qualidade do material depende inteiramente da
- * qualidade destes prompts — por isso eles carregam a especificação completa do
- * que o material deve conter, além do contexto do módulo e do progresso.
+ * qualidade destes prompts — por isso eles carregam o guia-exemplo (o padrão de
+ * qualidade), o contexto do módulo/tópico e o progresso.
+ *
+ * O material é pedido POR TÓPICO, não pelo módulo inteiro: pedir "AWS inteiro"
+ * força uma resposta gigante e a qualidade despenca. Um tópico por vez sai focado
+ * e profundo.
  */
 
 const MENTOR_FRAMING = `Você é um mentor de engenharia de software sênior preparando um desenvolvedor \
@@ -16,44 +21,44 @@ não explique o básico (o que é API, CRUD, React, Docker). Priorize raciocíni
 profundidade sobre memorização.`;
 
 /**
- * Prompt para GERAR o material de estudo de um módulo.
- * Inclui a especificação de formato/qualidade que o material deve seguir.
+ * Prompt para GERAR o material de estudo de UM TÓPICO de um módulo.
+ * Embute o guia-exemplo como padrão de qualidade a ser replicado.
  */
-export function buildMaterialPrompt(module: Module): string {
-  const topics = module.topics.map((t) => `- ${t}`).join('\n');
-
+export function buildMaterialPrompt(module: Module, topic: string): string {
   return `${MENTOR_FRAMING}
 
 # Tarefa
-Gere um material de estudo aprofundado sobre o módulo "${module.name}".
+Gere um material de estudo aprofundado sobre UM tópico específico:
+
+- **Módulo:** ${module.name}
+- **Tópico:** ${topic}
+
+Cubra SOMENTE este tópico. Não tente cobrir o módulo inteiro — outros tópicos têm seu próprio \
+material. Focar num tópico é o que mantém a qualidade alta.
 
 # Âncora (use como fio condutor)
-Sempre que possível, conecte os conceitos a esta experiência real do aluno:
+Sempre que possível, conecte o tópico a esta experiência real do aluno:
 "${module.anchor}"
 
-# Tópicos que o material DEVE cobrir
-${topics}
+# Padrão de qualidade — replique a estrutura, o tom e a profundidade do exemplo abaixo
+O exemplo a seguir é de OUTRO tópico. Use-o como molde de FORMA, não de conteúdo: mesma espinha \
+socrática (cada seção abre com uma pergunta que o aluno tenta responder antes de ler), mesma \
+profundidade técnica de referência, mesmos blocos de código comentados, mesma seção final de \
+auto-teste e de "onde o entrevistador vai cutucar".
 
-# Especificação do material (siga à risca)
-Para CADA tópico acima, o material deve conter, nesta ordem:
+--- INÍCIO DO GUIA-EXEMPLO ---
+${EXAMPLE_GUIDE}
+--- FIM DO GUIA-EXEMPLO ---
 
-1. **O que é e por que existe** — o problema que resolve, não só a definição.
-2. **Como funciona por dentro** — arquitetura, componentes, limitações. Profundidade de \
-engenheiro, não de tutorial.
-3. **Trade-offs** — quando usar, quando NÃO usar, e quais alternativas existem. Esta seção é \
-obrigatória e é a mais importante.
-4. **Exemplo de código** — curto, comentado, em TypeScript/Node quando fizer sentido. O código \
-ilustra o conceito; não precisa ser um projeto completo.
-5. **Como isso melhoraria o sistema do aluno** — aplicação concreta ao ERP financeiro, ligada à \
-âncora.
-
-# Formato
-- Markdown, com títulos claros por tópico.
-- Priorize prosa densa e precisa sobre listas rasas.
-- Ao fim de cada tópico, inclua **uma pergunta de aprofundamento** do tipo que um entrevistador \
-faria (ex.: "por que não a alternativa X?", "e se a escala for 100×?").
-- Encerre o material com uma seção "## Pontos que um entrevistador vai cutucar" listando os 3–5 \
-lugares onde o aluno provavelmente travaria sob aprofundamento.
+# Agora produza o material do tópico "${topic}"
+Siga o mesmo padrão do exemplo, adaptado a este tópico. Exigências:
+- Cada seção principal abre com uma **pergunta** e um convite a pensar antes da explicação.
+- Profundidade de engenheiro (o "porquê" e os trade-offs), não tutorial de superfície.
+- Ao menos um **exemplo de código** comentado (TypeScript/Node quando fizer sentido).
+- Conecte ao sistema do aluno (o ERP financeiro) via âncora, ao menos uma vez.
+- Termine com **"Teste-se antes do portão"** (perguntas de auto-verificação) e **"Onde o \
+entrevistador vai cutucar"** (armadilhas com resposta curta).
+- Markdown. Prosa densa e precisa sobre listas rasas.
 
 Escreva o material completo agora.`;
 }
@@ -63,9 +68,12 @@ Escreva o material completo agora.`;
  * Contextualiza o chat com o material e as anotações do aluno.
  */
 export function buildDoubtsPrompt(module: Module, progress?: ModuleProgress): string {
-  const hasMaterial = progress?.material?.content?.trim();
-  const materialBlock = hasMaterial
-    ? `\n\n# Material que o aluno já estudou (para contexto)\n${truncate(progress!.material!.content, 6000)}`
+  const materials = progress?.materials ?? {};
+  const combined = Object.entries(materials)
+    .map(([topic, m]) => `## ${topic}\n${m.content}`)
+    .join('\n\n');
+  const materialBlock = combined.trim()
+    ? `\n\n# Material que o aluno já estudou (para contexto)\n${truncate(combined, 8000)}`
     : '';
   const notesBlock = progress?.notes?.trim()
     ? `\n\n# Anotações do aluno\n${progress.notes.trim()}`

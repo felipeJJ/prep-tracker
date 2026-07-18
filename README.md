@@ -8,15 +8,17 @@ Um painel de estudo auto-dirigido para preparação a vagas de **Software Engine
 
 ## O modelo mental
 
-Cada módulo passa por um ciclo de quatro passos. O passo 3 é um **portão**: você só avança se sustentar uma entrevista simulada sobre o tema.
+Cada módulo se divide em **tópicos**, e o material é gerado **um tópico por vez** — pedir "o módulo inteiro" de uma vez força a IA a produzir um documento gigante e a qualidade despenca. Cada tópico gera seu próprio material, focado e profundo. Quando os tópicos estão cobertos, o módulo enfrenta o **portão**: uma entrevista simulada sobre o módulo inteiro, que você só passa se sustentar a conversa.
 
 ```
-  1. Gerar material  ──▶  2. Estudar + dúvidas  ──▶  3. Entrevista (portão)  ──▶  4. Veredito
-        │                        │                          │                        │
-   prompt p/ chat          prompt p/ chat             prompt p/ chat          PASSOU → módulo fecha
-   (cola e recebe          (contextualizado           (a IA avalia se     NÃO PASSOU → consome buffer,
-    o material)             com seu material)          você sustentou)      marca tópicos fracos
+  1. Gerar material        ──▶  2. Estudar + dúvidas  ──▶  3. Entrevista (portão)  ──▶  4. Veredito
+     POR TÓPICO                       │                          │                        │
+        │                        prompt p/ chat             prompt p/ chat          PASSOU → módulo fecha
+   prompt de 1 tópico +        (contextualizado           (cobre o módulo      NÃO PASSOU → consome buffer,
+   guia-exemplo embutido        com seus materiais)         inteiro; a IA avalia)  marca tópicos fracos
 ```
+
+O prompt de cada tópico embute um **guia-exemplo** (um tópico-modelo escrito por inteiro) que serve de padrão de qualidade — a IA replica a estrutura, o tom e a profundidade.
 
 O app **não chama nenhuma IA**. Ele monta o prompt certo, com o contexto certo, e você o cola num chat do Claude.ai (ou de outra IA que já use). O material e o veredito da entrevista voltam para o app por copiar-e-colar. Toda a inteligência de _quando_ e _com o quê_ pedir vive no app; a geração vive no seu plano de chat que já existe.
 
@@ -61,7 +63,8 @@ src/
 │  └─ program.ts        # os 13 módulos, derivados do plano de estudo
 ├─ lib/
 │  ├─ types.ts          # tipos de domínio
-│  ├─ prompts.ts        # geração dos 3 prompts (material, dúvidas, entrevista)
+│  ├─ prompts.ts        # geração dos 3 prompts (material por tópico, dúvidas, entrevista)
+│  ├─ exampleGuide.ts   # guia-exemplo embutido: o padrão de qualidade do material
 │  ├─ verdict.ts        # parser do veredito estruturado da entrevista
 │  ├─ schedule.ts       # progresso, estágios, consumo de buffer, cronograma dinâmico
 │  ├─ storage.ts        # único ponto que toca o localStorage
