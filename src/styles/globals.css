@@ -1,0 +1,92 @@
+:root {
+  /* Identidade: painel de instrumentos. Fundo profundo, acento azul-aço frio,
+     LEDs de status por estágio. Foge dos defaults cream+serif+terracota. */
+  --bg: #0e1116;
+  --bg-raised: #161b22;
+  --bg-sunk: #0a0d12;
+  --border: #232a33;
+  --border-strong: #313b47;
+  --ink: #e6edf3;
+  --ink-soft: #9aa7b4;
+  --ink-faint: #6b7683;
+
+  --steel: #4a9eff;
+  --steel-dim: #1e3a5f;
+
+  /* LEDs de estágio */
+  --led-idle: #4a545f;
+  --led-study: #4a9eff;
+  --led-ready: #d9a441;
+  --led-pass: #3fb950;
+  --led-review: #f0603c;
+
+  --f-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Inter", system-ui, -apple-system, sans-serif;
+  --f-mono: "JetBrains Mono", "SF Mono", ui-monospace, monospace;
+
+  --radius: 8px;
+}
+
+* { box-sizing: border-box; }
+html, body { padding: 0; margin: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 { font-family: var(--f-display); font-weight: 600; letter-spacing: -0.01em; margin: 0; }
+a { color: var(--steel); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+code, .mono { font-family: var(--f-mono); }
+
+button {
+  font-family: var(--f-body);
+  cursor: pointer;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-raised);
+  color: var(--ink);
+  border-radius: var(--radius);
+  padding: 0.5rem 0.9rem;
+  font-size: 0.9rem;
+  transition: border-color 0.15s, background 0.15s;
+}
+button:hover { border-color: var(--steel); }
+button:focus-visible { outline: 2px solid var(--steel); outline-offset: 2px; }
+button.primary { background: var(--steel-dim); border-color: var(--steel); color: var(--ink); }
+button.primary:hover { background: #24466f; }
+button.ghost { background: transparent; border-color: var(--border); }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+textarea {
+  width: 100%;
+  background: var(--bg-sunk);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  font-family: var(--f-mono);
+  font-size: 0.85rem;
+  line-height: 1.55;
+  resize: vertical;
+}
+textarea:focus-visible { outline: 2px solid var(--steel); outline-offset: 0; border-color: var(--steel); }
+
+.eyebrow {
+  font-family: var(--f-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.mono-num { font-family: var(--f-mono); color: var(--steel); font-variant-numeric: tabular-nums; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

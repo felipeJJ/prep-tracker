@@ -1,0 +1,31 @@
+{
+  "name": "prep-tracker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Rastreador de estudos auto-dirigido para preparação a vagas de Software Engineer internacional. Gera prompts contextualizados para estudo, dúvidas e entrevistas simuladas — e reajusta o cronograma conforme o progresso real.",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "next": "14.2.5",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "20.14.10",
+    "@types/react": "18.3.3",
+    "@types/react-dom": "18.3.0",
+    "typescript": "5.5.3",
+    "vitest": "2.0.5"
+  },
+  "engines": {
+    "node": ">=18.17"
+  }
+}
