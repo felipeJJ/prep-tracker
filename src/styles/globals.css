@@ -63,7 +63,8 @@ button.primary:hover { background: #24466f; }
 button.ghost { background: transparent; border-color: var(--border); }
 button:disabled { opacity: 0.45; cursor: not-allowed; }
 
-textarea {
+textarea,
+input[type='text'] {
   width: 100%;
   background: var(--bg-sunk);
   color: var(--ink);
@@ -75,7 +76,9 @@ textarea {
   line-height: 1.55;
   resize: vertical;
 }
-textarea:focus-visible { outline: 2px solid var(--steel); outline-offset: 0; border-color: var(--steel); }
+input[type='text'] { resize: none; }
+textarea:focus-visible,
+input[type='text']:focus-visible { outline: 2px solid var(--steel); outline-offset: 0; border-color: var(--steel); }
 
 .eyebrow {
   font-family: var(--f-mono);

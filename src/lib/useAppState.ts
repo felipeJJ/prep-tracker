@@ -6,6 +6,7 @@ import { loadState, saveState, clearState } from '@/lib/storage';
 import {
   initialState,
   saveMaterial as _saveMaterial,
+  saveMaterialPdf as _saveMaterialPdf,
   saveNotes as _saveNotes,
   markReadyForGate as _markReadyForGate,
   recordGateResult as _recordGateResult,
@@ -32,6 +33,13 @@ export function useAppState() {
     setState((s) => _saveMaterial(s, moduleId, topic, content));
   }, []);
 
+  const saveMaterialPdf = useCallback(
+    (moduleId: string, topic: string, pdfPath: string, content?: string) => {
+      setState((s) => _saveMaterialPdf(s, moduleId, topic, pdfPath, content));
+    },
+    [],
+  );
+
   const saveNotes = useCallback((moduleId: string, notes: string) => {
     setState((s) => _saveNotes(s, moduleId, notes));
   }, []);
@@ -53,6 +61,7 @@ export function useAppState() {
     state,
     hydrated,
     saveMaterial,
+    saveMaterialPdf,
     saveNotes,
     markReadyForGate,
     recordGateResult,

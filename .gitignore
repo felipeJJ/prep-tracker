@@ -24,6 +24,12 @@ yarn-error.log*
 .env*.local
 .env
 
+# contador local de uso da API (rede de segurança de custo)
+.api-usage.json
+
+# PDFs de material gerados via API (artefatos locais)
+/content/materiais/
+
 # testing
 /coverage
 

@@ -11,6 +11,7 @@ export default function Home() {
     state,
     hydrated,
     saveMaterial,
+    saveMaterialPdf,
     saveNotes,
     markReadyForGate,
     recordGateResult,
@@ -45,6 +46,9 @@ export default function Home() {
                   module={module}
                   progress={getProgress(state, module.id)}
                   onSaveMaterial={(topic, c) => saveMaterial(module.id, topic, c)}
+                  onSavePdf={(topic, pdfPath, content) =>
+                    saveMaterialPdf(module.id, topic, pdfPath, content)
+                  }
                   onSaveNotes={(n) => saveNotes(module.id, n)}
                   onReadyForGate={() => markReadyForGate(module.id)}
                   onRecordVerdict={(r) => recordGateResult(module.id, r)}

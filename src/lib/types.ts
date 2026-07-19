@@ -64,12 +64,19 @@ export interface GateResult {
   notes?: string;
 }
 
-/** Material de estudo de UM tópico, colado de volta no app após gerado num chat. */
+/**
+ * Material de estudo de UM tópico. Há dois caminhos, refletidos aqui:
+ *  - Via API (caminho principal): o material vira um PDF no servidor; guarda-se `pdfPath`.
+ *  - Via copiar-e-colar (fallback): o markdown colado do chat vai em `content`.
+ * Pelo menos um dos dois está presente.
+ */
 export interface StudyMaterial {
   /** Data ISO em que foi salvo. */
   savedAt: string;
-  /** Conteúdo em markdown, colado do chat. */
-  content: string;
+  /** URL para abrir o PDF gerado via API (ex.: /api/materiais/m4-event-loop.pdf). */
+  pdfPath?: string;
+  /** Conteúdo em markdown, colado do chat no modo fallback. */
+  content?: string;
 }
 
 /**

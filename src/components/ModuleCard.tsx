@@ -15,6 +15,7 @@ export function ModuleCard({
   module,
   progress,
   onSaveMaterial,
+  onSavePdf,
   onSaveNotes,
   onReadyForGate,
   onRecordVerdict,
@@ -22,6 +23,7 @@ export function ModuleCard({
   module: Module;
   progress: ModuleProgress;
   onSaveMaterial: (topic: string, content: string) => void;
+  onSavePdf: (topic: string, pdfPath: string, content?: string) => void;
   onSaveNotes: (notes: string) => void;
   onReadyForGate: () => void;
   onRecordVerdict: (result: GateResult) => void;
@@ -31,6 +33,9 @@ export function ModuleCard({
   const [verdictDraft, setVerdictDraft] = useState('');
   const [verdictError, setVerdictError] = useState<string | null>(null);
   const [notesDraft, setNotesDraft] = useState(progress.notes);
+  const [fieldPassed, setFieldPassed] = useState<boolean | null>(null);
+  const [fieldWeak, setFieldWeak] = useState('');
+  const [fieldComment, setFieldComment] = useState('');
 
   const lastGate = progress.gateResults[progress.gateResults.length - 1];
   const attempts = progress.gateResults.length;
@@ -59,6 +64,25 @@ export function ModuleCard({
     onRecordVerdict(parsed.result);
     setVerdictDraft('');
     setVerdictError(null);
+    setPanel(null);
+  }
+
+  // Registro por campos: monta o GateResult direto, sem parsing. Pensado para o modo de
+  // voz, onde não sai um bloco ===VEREDITO=== natural — você só digita o que ouviu.
+  function submitFields() {
+    if (fieldPassed === null) return;
+    onRecordVerdict({
+      at: new Date().toISOString(),
+      passed: fieldPassed,
+      weakTopics: fieldWeak
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean),
+      notes: fieldComment.trim() || undefined,
+    });
+    setFieldPassed(null);
+    setFieldWeak('');
+    setFieldComment('');
     setPanel(null);
   }
 
@@ -164,22 +188,41 @@ export function ModuleCard({
               progress={progress}
               isWeak={isWeakTopic(topic)}
               onSaveMaterial={onSaveMaterial}
+              onSavePdf={onSavePdf}
             />
           ))}
 
-          {/* Ações do módulo */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', margin: '1rem 0 0.3rem' }}>
+          {/* Progresso do módulo — sempre visível e marcável */}
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              gap: '0.6rem',
+              margin: '1.1rem 0 0.3rem',
+            }}
+          >
+            <StatusLed stage={progress.stage} showLabel />
+            {progress.stage !== 'passed' && progress.stage !== 'ready-for-gate' && (
+              <button className="ghost" onClick={onReadyForGate}>
+                Marquei que estudei →
+              </button>
+            )}
+            {progress.stage === 'ready-for-gate' && (
+              <span style={{ fontSize: '0.76rem', color: 'var(--ink-faint)' }}>
+                Pronto para o portão — faça a entrevista e registre o resultado abaixo.
+              </span>
+            )}
+          </div>
+
+          {/* Ações */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', margin: '0.5rem 0 0.3rem' }}>
             <button className="ghost" onClick={() => togglePanel('doubts')} disabled={covered === 0}>
               Tirar dúvidas
             </button>
             <button className="ghost" onClick={() => togglePanel('interview')}>
-              Modo entrevista (portão)
+              Entrevista + registrar resultado
             </button>
-            {progress.stage === 'studying' && (
-              <button className="ghost" onClick={onReadyForGate}>
-                Marcar “estudei”
-              </button>
-            )}
           </div>
 
           {!allCovered && (
@@ -200,16 +243,63 @@ export function ModuleCard({
           )}
 
           {panel === 'interview' && (
-            <Panel title="Prompt do modo entrevista (portão)">
+            <Panel title="Entrevista do módulo (portão)">
               <p style={hint}>
-                A entrevista cobre o módulo inteiro. Cole num chat novo, responda, e ao final o
-                avaliador emite um veredito estruturado — cole a resposta inteira aqui para registrar.
+                Copie o prompt e cole numa conversa nova no app do Claude — a IA já começa como
+                entrevistadora sobre este módulo. O material que você estudou vai <strong>embutido</strong>{' '}
+                no prompt como contexto; se quiser, anexe também os PDFs deste módulo à conversa. Faça
+                por <strong>voz</strong> (treina o inglês falado). Ao final, a IA dá o resultado —
+                registre-o de uma das duas formas abaixo.
               </p>
-              <CopyButton text={buildInterviewPrompt(module)} label="Copiar prompt de entrevista" />
-              <div style={{ marginTop: '0.8rem' }}>
-                <label style={label}>Colar resposta da entrevista (com o veredito)</label>
+              <CopyButton text={buildInterviewPrompt(module, progress)} label="Copiar prompt de entrevista" />
+
+              {/* Registro por campos — natural para o modo de voz */}
+              <div style={{ marginTop: '0.9rem' }}>
+                <label style={label}>Registrar por campos (modo de voz)</label>
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                  <button
+                    className={fieldPassed === true ? 'primary' : 'ghost'}
+                    onClick={() => setFieldPassed(true)}
+                    aria-pressed={fieldPassed === true}
+                  >
+                    Passou
+                  </button>
+                  <button
+                    className={fieldPassed === false ? 'primary' : 'ghost'}
+                    onClick={() => setFieldPassed(false)}
+                    aria-pressed={fieldPassed === false}
+                  >
+                    Não passou
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={fieldWeak}
+                  onChange={(e) => setFieldWeak(e.target.value)}
+                  placeholder="Tópicos fracos, separados por vírgula (ou deixe vazio)"
+                  style={{ marginBottom: '0.5rem' }}
+                />
                 <textarea
-                  rows={6}
+                  rows={2}
+                  value={fieldComment}
+                  onChange={(e) => setFieldComment(e.target.value)}
+                  placeholder="Comentário do avaliador (opcional)…"
+                />
+                <button
+                  className="primary"
+                  style={{ marginTop: '0.5rem' }}
+                  disabled={fieldPassed === null}
+                  onClick={submitFields}
+                >
+                  Registrar resultado
+                </button>
+              </div>
+
+              {/* Registro por texto — cola o bloco estruturado (modo por texto) */}
+              <div style={{ marginTop: '0.9rem', borderTop: '1px solid var(--border)', paddingTop: '0.8rem' }}>
+                <label style={label}>Ou colar a resposta com o veredito (modo por texto)</label>
+                <textarea
+                  rows={5}
                   value={verdictDraft}
                   onChange={(e) => setVerdictDraft(e.target.value)}
                   placeholder="Cole a resposta do chat, incluindo o bloco ===VEREDITO===…"
@@ -219,8 +309,8 @@ export function ModuleCard({
                     {verdictError}
                   </p>
                 )}
-                <button className="primary" style={{ marginTop: '0.5rem' }} onClick={submitVerdict}>
-                  Registrar resultado
+                <button className="ghost" style={{ marginTop: '0.5rem' }} onClick={submitVerdict}>
+                  Registrar do texto colado
                 </button>
               </div>
             </Panel>

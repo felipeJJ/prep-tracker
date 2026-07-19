@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   initialState,
   saveMaterial,
+  saveMaterialPdf,
   materialsCount,
   allTopicsCovered,
   markReadyForGate,
@@ -51,6 +52,22 @@ describe('fluxo de material e estágios', () => {
     expect(materialsCount(p)).toBe(2);
     expect(p.materials['t2']?.content).toBe('material t2');
     expect(p.materials['extra']?.content).toBe('material extra');
+  });
+
+  it('saveMaterialPdf guarda pdfPath + markdown, cobre o tópico e move para studying', () => {
+    let s = initialState();
+    s = saveMaterialPdf(s, 'a', 't1', '/api/materiais/a-t1.pdf', '# conteúdo do material', now);
+    const m = getProgress(s, 'a').materials['t1'];
+    expect(m?.pdfPath).toBe('/api/materiais/a-t1.pdf');
+    expect(m?.content).toBe('# conteúdo do material');
+    expect(getProgress(s, 'a').stage).toBe('studying');
+    expect(allTopicsCovered(testProgram.modules[0]!, getProgress(s, 'a'))).toBe(true);
+  });
+
+  it('tópico coberto só por PDF (sem markdown) ainda conta como coberto', () => {
+    let s = initialState();
+    s = saveMaterialPdf(s, 'a', 't1', '/api/materiais/a-t1.pdf', undefined, now);
+    expect(allTopicsCovered(testProgram.modules[0]!, getProgress(s, 'a'))).toBe(true);
   });
 
   it('allTopicsCovered vira true só quando todos os tópicos têm material', () => {

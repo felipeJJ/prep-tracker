@@ -64,14 +64,46 @@ export function saveMaterial(
   return { ...state, progress: { ...state.progress, [moduleId]: next } };
 }
 
+/**
+ * Salva a referência ao PDF gerado via API para UM tópico (caminho principal).
+ * Mesma semântica de estágio que `saveMaterial`: só promove "not-started" → "studying".
+ */
+export function saveMaterialPdf(
+  state: AppState,
+  moduleId: string,
+  topic: string,
+  pdfPath: string,
+  content?: string,
+  now: () => Date = () => new Date(),
+): AppState {
+  const prev = getProgress(state, moduleId);
+  const stage: ModuleStage = prev.stage === 'not-started' ? 'studying' : prev.stage;
+  const next: ModuleProgress = {
+    ...prev,
+    stage,
+    materials: {
+      ...prev.materials,
+      // Guarda o PDF (para abrir) E o markdown (para embutir como contexto em dúvidas/entrevista).
+      [topic]: { savedAt: now().toISOString(), pdfPath, content: content?.trim() || undefined },
+    },
+  };
+  return { ...state, progress: { ...state.progress, [moduleId]: next } };
+}
+
 /** Quantos tópicos do módulo já têm material salvo. */
 export function materialsCount(progress: ModuleProgress): number {
   return Object.keys(progress.materials).length;
 }
 
+/** true se o tópico tem material — em PDF (via API) OU em texto (fallback colado). */
+export function topicCovered(progress: ModuleProgress, topic: string): boolean {
+  const m = progress.materials[topic];
+  return !!(m?.pdfPath || m?.content?.trim());
+}
+
 /** true quando todos os tópicos do módulo têm material — pronto para o portão. */
 export function allTopicsCovered(module: Module, progress: ModuleProgress): boolean {
-  return module.topics.every((t) => progress.materials[t]?.content?.trim());
+  return module.topics.every((t) => topicCovered(progress, t));
 }
 
 /** Marca que o aluno terminou de estudar e está pronto para o portão. */
